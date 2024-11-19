@@ -17,8 +17,13 @@
 
 #include "bsp_def.h"
 
+/*
+ *  app_msg
+ *  实现双控制器之间的通信，以及对部分通信协议的封装。
+ */
+
 app_msg_dual_t dual_msg;
-uint32_t dual_msg_id = 0x123;
+uint32_t dual_msg_id_chassis = 0x123, dual_msg_id_gimbal = 0x345;
 bsp_can_e dual_msg_port = E_CAN2;
 
 app_msg_dual_t *app_msg_dual() {
@@ -27,7 +32,11 @@ app_msg_dual_t *app_msg_dual() {
 
 void app_msg_dual_send() {
     dual_msg.ins_yaw = INS::data()->yaw;
-    bsp_can_send(dual_msg_port, dual_msg_id, reinterpret_cast <uint8_t*> (&dual_msg));
+#ifdef COMPILE_GIMBAL
+    bsp_can_send(dual_msg_port, dual_msg_id_gimbal, reinterpret_cast <uint8_t*> (&dual_msg));
+#else
+    bsp_can_send(dual_msg_port, dual_msg_id_chassis, reinterpret_cast <uint8_t*> (&dual_msg));
+#endif
 }
 
 void app_msg_dual_recv(bsp_can_msg_t *msg) {
@@ -35,15 +44,17 @@ void app_msg_dual_recv(bsp_can_msg_t *msg) {
 }
 
 void app_msg_dual_init() {
-    // 启用双板且为云台代码，则为双板通信接收端，启用回调函数
-#if defined(USE_DUAL_CONTROLLERS) && defined(COMPILE_GIMBAL)
-    bsp_can_set_callback(dual_msg_port, dual_msg_id, app_msg_dual_recv);
+#ifdef USE_DUAL_CONTROLLERS
+#ifdef COMPILE_GIMBAL
+    bsp_can_set_callback(dual_msg_port, dual_msg_id_chassis, app_msg_dual_recv);
+#else
+    bsp_can_set_callback(dual_msg_port, dual_msg_id_gimbal, app_msg_dual_recv);
+#endif
 #endif
 }
 
 void app_msg_dual_task(void *argument) {
-    // 若未启用双板或为云台代码，则删除该发送任务（只有启用双板且为底盘才会用到这个发送任务）
-#if !defined(USE_DUAL_CONTROLLERS) || defined(COMPILE_GIMBAL)
+#ifndef USE_DUAL_CONTROLLERS
     OS::Task::Current().Delete();
 #endif
     while(true) {
@@ -53,7 +64,7 @@ void app_msg_dual_task(void *argument) {
 }
 
 /*
- *  上面是双板通信部分，下面是对一些调试接口的封装。
+ *  Vofa+ Justfloat
  */
 
 float ch[APP_MSG_VOFA_CHANNEL_LIMIT];
