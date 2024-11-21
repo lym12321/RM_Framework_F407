@@ -10,6 +10,7 @@
 
 #include "sys_task.h"
 
+#include "app_sys.h"
 #include "app_conf.h"
 #include "app_msg.h"
 #include "bsp_rc.h"
