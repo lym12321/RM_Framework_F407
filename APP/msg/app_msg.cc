@@ -19,49 +19,8 @@
 
 /*
  *  app_msg
- *  实现双控制器之间的通信，以及对部分通信协议的封装。
+ *  实现对部分通信协议的封装。
  */
-
-app_msg_dual_t dual_msg;
-uint32_t dual_msg_id_chassis = 0x123, dual_msg_id_gimbal = 0x345;
-bsp_can_e dual_msg_port = E_CAN2;
-
-app_msg_dual_t *app_msg_dual() {
-    return &dual_msg;
-}
-
-void app_msg_dual_send() {
-    dual_msg.ins_yaw = INS::data()->yaw;
-#ifdef COMPILE_GIMBAL
-    bsp_can_send(dual_msg_port, dual_msg_id_gimbal, reinterpret_cast <uint8_t*> (&dual_msg));
-#else
-    bsp_can_send(dual_msg_port, dual_msg_id_chassis, reinterpret_cast <uint8_t*> (&dual_msg));
-#endif
-}
-
-void app_msg_dual_recv(bsp_can_msg_t *msg) {
-    memcpy(&dual_msg, msg->data, sizeof(app_msg_dual_t));
-}
-
-void app_msg_dual_init() {
-#ifdef USE_DUAL_CONTROLLERS
-#ifdef COMPILE_GIMBAL
-    bsp_can_set_callback(dual_msg_port, dual_msg_id_chassis, app_msg_dual_recv);
-#else
-    bsp_can_set_callback(dual_msg_port, dual_msg_id_gimbal, app_msg_dual_recv);
-#endif
-#endif
-}
-
-void app_msg_dual_task(void *argument) {
-#ifndef USE_DUAL_CONTROLLERS
-    OS::Task::Current().Delete();
-#endif
-    while(true) {
-        app_msg_dual_send();
-        OS::Task::SleepMilliseconds(1);
-    }
-}
 
 /*
  *  Vofa+ Justfloat

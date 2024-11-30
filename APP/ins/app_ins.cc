@@ -36,7 +36,9 @@ namespace INS {
     ins_data_t data_;
     OS::Task ins_task;
     Algorithm::PID temp_pid(Algorithm::PID::POSITION);
-    uint8_t imu_state = 0;
+    // 这里跳过温度检测，在未达到指定温度的情况下直接开始算 err，会快一点
+    // 后面考虑加校准功能，把参数存 flash 里。
+    uint8_t imu_state = 1;
     bool inited_ = false;
 
     void task(void *args) {
@@ -69,7 +71,7 @@ namespace INS {
                     raw_data->gyro[2] - gyro_err[2]
                 };
                 // CHEAT: 忽略极小的变化，借此尽可能消除零漂
-                if(std::abs(gyro[2]) < 0.01f) gyro[2] = 0;
+                if(std::abs(gyro[2]) < 0.1f) gyro[2] = 0;
                 IMU_QuaternionEKF_Update(
                     gyro[0], gyro[1], gyro[2],
                     raw_data->accel[0], raw_data->accel[1], raw_data->accel[2]

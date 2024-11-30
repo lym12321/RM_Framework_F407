@@ -8,6 +8,12 @@
 
 #include "stdint.h"
 
+/*
+ *  bsp_adc
+ *  读 vbus 电压用
+ *  从 dm-mc02 搬过来的，C 板的这部分还没写。
+ */
+
 static uint16_t val[2];
 
 void bsp_adc_init(void) {

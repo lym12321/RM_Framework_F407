@@ -35,14 +35,13 @@ int8_t r = 0, g = 0, b = 0;
 void app_sys_init() {
     INS::init();
 
-#if defined(COMPILE_CHASSIS_MECANUM) || defined(COMPILE_CHASSIS_OMNI)
+#if defined(COMPILE_CHASSIS_MECANUM) || defined(COMPILE_CHASSIS_OMNI) || defined(COMPILE_CHASSIS_AGV)
     app_chassis_init();
 #endif
 #ifdef COMPILE_GIMBAL
     app_gimbal_init();
 #endif
 
-    app_msg_dual_init();
     inited_ = true;
 }
 

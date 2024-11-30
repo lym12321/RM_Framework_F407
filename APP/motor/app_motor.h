@@ -31,13 +31,14 @@ public:
     void relax() { is_relax_ = true, pid_speed_.clear(), pid_angle_.clear(), motor_.update(0); };
     void activate() { if(is_relax_) is_relax_ = false; };
 
-    double target, lst_angle = 0, sum_angle = 0;
+    float target, speed = 0, angle = 0, lst_angle = 0, sum_angle = 0, encoder_zero = 0;
+    bool reverse = false;               // reverse，启用后会翻转电机速度正方向（仅适用于单速度环控制模式）
+    bool use_ext_angle = false;         // Extra angle，启用后会计算总角度，且依靠总角度闭环
+    bool use_degree_angle = false;      // Degree angle，启用后会以 encoder_zero 为零点将电机角度映射到 [0, 360) (deg) 范围，逆时针为正方向（若电反装则为顺时针）
     DJIMotor *device() { return &motor_; };
-    bool reverse = false;
-    bool ext_angle = false;
 
 private:
-    uint16_t err_count = 0;
+    uint16_t err_count_ = 0;
     bool is_relax_ = false, offline_ = false;
     uint8_t control_mode_;
     DJIMotor motor_;
